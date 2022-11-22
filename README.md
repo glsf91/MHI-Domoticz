@@ -6,6 +6,7 @@ Change ip-adress in shell script.
 Copy everything somewhere in a subdirectory.
 
 first try to run the command from the commandline: python3 mhi.py --print <ip-address airco>
+
 You maybe have to add some python libraries. You will see when running this command.
 Use dzventz.txt in domoticz. Adjust path of shell script
 Create devices as mentioned in dzVentz script.
