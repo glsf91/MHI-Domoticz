@@ -5,8 +5,7 @@ Copied some stuff from https://github.com/jeatheak/Mitsubishi-WF-RAC-Integration
 Change ip-adress in shell script.
 Copy everything somewhere in a subdirectory.
 
-first try to run the command from the commandline: python3 mhi.py --print x.x.x.x 
-x.x.x.x = ip-address airco
+first try to run the command from the commandline: python3 mhi.py --print x.x.x.x (ip-address airco)
 
 You maybe have to add some python libraries. You will see when running this command.
 Use dzventz.txt in domoticz. Adjust path of shell script
