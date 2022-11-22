@@ -1,0 +1,136 @@
+-- Script to read data from MHI
+
+--[[
+{
+    "Operation": false,
+    "PresetTemp": 18.0,
+    "OperationMode": 1,
+    "AirFlow": 4,
+    "WindDirectionUD": 3,
+    "WindDirectionLR": 0,
+    "Entrust": false,
+    "CoolHotJudge": false,
+    "ModelNr": 0,
+    "Vacant": 0,
+    "ErrorCode": "00",
+    "Electric": 21.25,
+    "IndoorTemp": 20.2,
+    "OutdoorTemp": 17.2
+}
+
+AirFlow:
+0: "Auto"
+1: "Lowest"
+2: "Low"
+3: "High"
+4: "Highest"
+
+OperationMode:
+0: "Auto"
+1: "Cooling"
+2: "Heating"
+3: "Fan"
+4: "Dry"
+
+WindDirectionUD:
+0: "Auto"
+1: "High"
+2: "Middle"
+3: "Deep"
+4: "Deepest"
+
+WindDirectionLR:
+0: "Left/Right Auto"
+1: "Left / Left"
+2: "Left / Middle"
+3: "Middle / Mitte"
+4: "Middle / Right"
+5: "Right / Right"
+6: "Left / Right"
+7: "Right / Left"
+
+Create devices in domoticz:
+MHI-Woonkamer-energy : Custom sensor
+MHI-Woonkamer-PresetTemp : temp sensor
+MHI-Woonkamer-IndoorTemp : temp sensor
+MHI-Woonkamer-OutdoorTemp : temp sensor
+MHI-Woonkamer-UpDown : Switch selector with Levelnames Auto, High, Middle, Deep, Deepest (is this order)
+
+]]
+
+local scriptVar = 'MHI caller'
+
+return {
+    active = true,
+	logging = {
+    	level = domoticz.LOG_DEBUG, -- Uncomment to override the dzVents global logging setting and use debug
+    	marker = 'MHI-woonkamer'
+	},
+   on = {
+        timer = {
+                 'every minute'
+        },
+        shellCommandResponses =
+        {
+            scriptVar
+        }
+   },
+
+   execute = function(domoticz,item)
+       
+        domoticz.log('Call MHI', domoticz.LOG_DEBUG)
+
+        if item.isTimer then
+            domoticz.executeShellCommand(
+                {
+                    command = '/home/john/WFRAC/domoticz_mhi_woonkamer.sh',
+                    callback = scriptVar,
+                    timeout = 9,
+                }
+            )
+        elseif item.isShellCommandResponse then
+            if item.statusCode == 0 then
+                 -- process result (in item.json, -item.xml, -item.lines or item.data)
+                domoticz.log('Result call: ' ..item.data, domoticz.LOG_DEBUG)
+                domoticz.log('Result json Operation: ' ..tostring(item.json.Operation), domoticz.LOG_DEBUG)
+                domoticz.log('Result json PresetTemp: ' ..item.json.PresetTemp, domoticz.LOG_DEBUG)
+                domoticz.log('Result json IndoorTemp: ' ..item.json.IndoorTemp, domoticz.LOG_DEBUG)
+                domoticz.log('Result json OutdoorTemp: ' ..item.json.OutdoorTemp, domoticz.LOG_DEBUG)
+                domoticz.log('Result json Electric: ' ..item.json.Electric, domoticz.LOG_DEBUG)
+                domoticz.log('Result json WindDirectionUD: ' ..item.json.WindDirectionUD, domoticz.LOG_DEBUG)
+                domoticz.log('Result json WindDirectionLR: ' ..item.json.WindDirectionLR, domoticz.LOG_DEBUG)
+                domoticz.log('Result json OperationMode: ' ..item.json.OperationMode, domoticz.LOG_DEBUG)
+
+                if ( item.json.Operation ) then
+                    domoticz.devices('MHI-Woonkamer-Operation').switchOn().checkFirst().silent()
+                else
+                    domoticz.devices('MHI-Woonkamer-Operation').switchOff().checkFirst().silent()
+                end
+
+
+                if (item.json.WindDirectionUD == 0 ) then  -- Auto
+                     domoticz.devices('MHI-Woonkamer-UpDown').switchSelector(0)
+                elseif (item.json.WindDirectionUD == 1 ) then -- High
+                     domoticz.devices('MHI-Woonkamer-UpDown').switchSelector(10)
+                elseif (item.json.WindDirectionUD == 2 ) then  -- Middle
+                     domoticz.devices('MHI-Woonkamer-UpDown').switchSelector(20)
+                elseif (item.json.WindDirectionUD == 3 ) then  -- Deep
+                     domoticz.devices('MHI-Woonkamer-UpDown').switchSelector(30)
+                elseif (item.json.WindDirectionUD == 4 ) then  -- Deepest
+                     domoticz.devices('MHI-Woonkamer-UpDown').switchSelector(40)
+                end
+                    
+                domoticz.devices('MHI-Woonkamer-energy').updateCustomSensor(item.json.Electric)
+                domoticz.devices('MHI-Woonkamer-PresetTemp').updateTemperature(item.json.PresetTemp)
+                domoticz.devices('MHI-Woonkamer-IndoorTemp').updateTemperature(item.json.IndoorTemp)
+                domoticz.devices('MHI-Woonkamer-OutdoorTemp').updateTemperature(item.json.OutdoorTemp)
+
+                
+            else
+                domoticz.log('Something wrong; Statuscode: ' ..item.statusCode, domoticz.LOG_ERROR)
+                domoticz.log('Error text: ' ..item.errorText, domoticz.LOG_ERROR)
+            end
+        end
+       
+   end
+}
