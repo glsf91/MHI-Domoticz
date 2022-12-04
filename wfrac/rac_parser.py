@@ -215,14 +215,16 @@ class RacParser:
         """Translate bytes"""
 
         ac_device: Aircon = Aircon()
-        # print(inputString)
+        #print(input_string)
 
         # convert to byte array
         content_byte_array = b64decode(bytearray(input_string, encoding="UTF"))
+        #print(hex(content_byte_array[52]), hex(content_byte_array[53]), hex(content_byte_array[54]), hex(content_byte_array[55]))
         # Convert to signed integers instead of bytes
         content_byte_array = [
             (256 - a) * (-1) if a > 127 else a for a in content_byte_array
         ]
+        #print(hex(content_byte_array[52]), hex(content_byte_array[53]), hex(content_byte_array[54]), hex(content_byte_array[55]))
 
         # get te start of the first bytearray segment we use
         start_length = content_byte_array[18] * 4 + 21
@@ -267,7 +269,22 @@ class RacParser:
             if vals[i] == -128 and vals[i + 1] == 32:
                 ac_device.IndoorTemp = indoorTempList[vals[i + 2] & 0xFF]
             if vals[i] == -108 and vals[i + 1] == 16:
-                ac_device.Electric = int.from_bytes(vals[i + 2: i + 3], "little", signed=False ) * 0.25
+                #print("electric first byte: " + str(vals[i + 2]))
+                #print("electric first byte: " + str(vals[i + 3]))
+                #print(type(vals[i+2]))
+                #ac_device.Electric = int.from_bytes(vals[i + 2: i + 3], "little", signed=False ) * 0.25
+#                if vals[i+2] <0 :
+#                    vals[i+2] = vals[i+2] & 0x7F
+#                    print("vals[i+2]: " + str(vals[i + 2]))
+#                    ac_device.Electric = (vals[i + 3] * 64 + (vals[i + 2]) + 128 )* 0.25
+#                else :
+#                    ac_device.Electric = (vals[i + 3] * 64 + vals[i + 2]) * 0.25
+
+                #print("vals[i+2] & 0xF0: " + str(vals[i + 2] & 0xF0))
+                #print("vals[i+2] & 0x7F: " + str(vals[i + 2] & 0x7F))
+                #print("vals[i+2] : " + str(vals[i + 2] & 0x7F))
+                ac_device.Electric = ( ((vals[i + 3] & 0x7f) + (vals[i + 3] & 0xF0) * 64) + (vals[i + 2] & 0x7f) + (vals[i + 2] & 0xF0) )* 0.25
+               
 
         return ac_device
 
