@@ -283,7 +283,7 @@ class RacParser:
                 #print("vals[i+2] & 0xF0: " + str(vals[i + 2] & 0xF0))
                 #print("vals[i+2] & 0x7F: " + str(vals[i + 2] & 0x7F))
                 #print("vals[i+2] : " + str(vals[i + 2] & 0x7F))
-                ac_device.Electric = ( ((vals[i + 3] & 0x7f) + (vals[i + 3] & 0xF0) * 64) + (vals[i + 2] & 0x7f) + (vals[i + 2] & 0xF0) )* 0.25
+                ac_device.Electric = ( (((vals[i + 3] & 0x7f) + (vals[i + 3] & 0xF0)) * 64) + (vals[i + 2] & 0x7f) + (vals[i + 2] & 0xF0) )* 0.25
                
 
         return ac_device
